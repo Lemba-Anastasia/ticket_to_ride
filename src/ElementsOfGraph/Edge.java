@@ -18,8 +18,8 @@ public class Edge {
         return built;
     }
 
-    public void setSecondNode(Node secondNode) {
-        this.secondNode = secondNode;
+    public void setBuilt(boolean built) {
+        this.built = built;
     }
 
     public Node getFirstNode() {
@@ -28,6 +28,16 @@ public class Edge {
 
     public Node getSecondNode() {
         return secondNode;
+    }
+
+    public boolean containNode(Node node) {
+        return firstNode == node || secondNode == node;
+    }
+
+    public Node getAnotherNode(Node node){
+        if(node==firstNode) {return  secondNode;}
+        else if(node==secondNode){ return firstNode;}
+        else return null;
     }
 
 }

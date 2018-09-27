@@ -1,8 +1,5 @@
 package ElementsOfGraph;
 
-import ElementsOfGraph.Edge;
-import ElementsOfGraph.Node;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,8 +15,16 @@ public class GraphOfCities {
         return nodeList;
     }
 
+    public void setNodeList(List<Node> nodeList) {
+        this.nodeList = nodeList;
+    }
+
     public List<Edge> getEdgeList() {
         return edgeList;
+    }
+
+    public void setEdgeList(List<Edge> edgeList) {
+        this.edgeList = edgeList;
     }
 
     public void addEdge(Edge edge) {
@@ -30,14 +35,14 @@ public class GraphOfCities {
         nodeList.add(node);
     }
 
-    public void setNodeList(List<Node> nodeList) {
-        this.nodeList = nodeList;
+    public Node getNodeByName(String name) {
+        for (Node n : nodeList) {
+            if (n.getName().equals(name)) {
+                return n;
+            }
+        }
+        return null;
     }
-
-    public void setEdgeList(List<Edge> edgeList) {
-        this.edgeList = edgeList;
-    }
-
 
     public void createEdgeBehindTwoNodeWithId(String nameBeginNode, String nameEndNode) {
         Node nodeBegin = null;
@@ -62,5 +67,13 @@ public class GraphOfCities {
             edgeIterator.next();
             edgeIterator.remove();
         }
+    }
+
+    public Edge searchEdgeByNodes(Node punktA, Node punktB) {
+        for (Edge edge: edgeList){
+            if(edge.containNode(punktA)&&edge.containNode(punktB))
+                return edge;
+        }
+        return null;
     }
 }
