@@ -2,9 +2,10 @@ package View;
 
 import Controllers.ClavaListener;
 import Controllers.Controller;
-import Controllers.WorkWithFile;
+import Controllers.RequestSender;
 import ElementsOfGraph.Edge;
 import ElementsOfGraph.Node;
+
 import javax.swing.*;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
@@ -22,7 +23,7 @@ public class View {
     private JFrame frame;
     private BufferedImage imag;
     private JLabel missionLabel;
-    private JButton trainButton;
+    private JButton registrationButton;
     private JButton stopGameButton;
     private JLabel pointForDoingRoadLabel;
     private JLabel budgetLabel;
@@ -30,14 +31,16 @@ public class View {
     private JLabel jLabel;
     private Color colorOfBuidRoad;
     private Color colorOfNonBuildRoad;
-    private JScrollPane jsp;
-    private WorkWithFile workWithFile;
     private Controller controller;
     private Color colorOfCities;
     private Color colorOfActiveCities;
+    private Color colorOfCompanion;
     private JButton mission1;
     private JButton mission2;
     private MissioncCreator missioncCreator;
+    private RequestSender requestSender;
+    private TextArea serverMessagesLabel;
+    private JLabel userNameLabel;
 
     public View(Controller controller) {
         frame = new JFrame("Ticket to ride");
@@ -50,36 +53,40 @@ public class View {
         this.controller = controller;
         missioncCreator = new MissioncCreator(controller);
         missionLabel = new JLabel("Выберите миссию");
-        trainButton = new JButton("Ход поездом");
+        registrationButton = new JButton("Регистрация");
         stopGameButton = new JButton("Стоп игра");
 
         pointForDoingRoadLabel = new JLabel("Очки за дорогу: " + controller.getPoinsForDoingRoad());
         budgetLabel = new JLabel("Ваш бюджет:" + controller.getBudget() + " у.е.");
-        mission1 = missioncCreator.createButton();
-        mission2 = missioncCreator.createButton();
+        mission1 = new JButton();
+        mission2 = new JButton();
+        serverMessagesLabel = new TextArea();
+        userNameLabel = new JLabel();
 
         int leftIdent = 520;
         int topIdent = 20;
         int heightOfButton = 30;
         int ident = 10;
         int widthOfButton = 110;
-        trainButton.setBounds(leftIdent, (topIdent), widthOfButton, heightOfButton);
+        registrationButton.setBounds(leftIdent, (topIdent), widthOfButton, heightOfButton);
         stopGameButton.setBounds(leftIdent, (topIdent += heightOfButton + ident), widthOfButton, heightOfButton);
         pointForDoingRoadLabel.setBounds(leftIdent, (topIdent += heightOfButton + ident), widthOfButton + 30, heightOfButton);
         budgetLabel.setBounds(leftIdent, (topIdent += heightOfButton + ident), widthOfButton + 20, heightOfButton);
         missionLabel.setBounds(leftIdent, (topIdent += heightOfButton + ident), widthOfButton + 50, heightOfButton);
         mission1.setBounds(leftIdent, (topIdent += heightOfButton + ident), widthOfButton + 50, heightOfButton);
         mission2.setBounds(leftIdent, (topIdent += heightOfButton + ident), widthOfButton + 50, heightOfButton);
+        serverMessagesLabel.setBounds(leftIdent, (topIdent += heightOfButton + ident), widthOfButton + 50, 90);
+        userNameLabel.setBounds(leftIdent, (topIdent += heightOfButton * 3 + ident * 2), widthOfButton + 20, heightOfButton);
 
         int widthOfImage = 913;
         int heightOfImage = 790;
 
-        workWithFile = new WorkWithFile();
         colorOfBuidRoad = Color.black;
         colorOfNonBuildRoad = Color.GRAY;
         colorOfActiveCities = Color.red;
         colorOfCities = Color.BLACK;
         colorOfCities.brighter();
+        colorOfCompanion=Color.ORANGE;
 
         imag = new BufferedImage(widthOfImage, heightOfImage, BufferedImage.TYPE_INT_RGB);
         graphics2D = (Graphics2D) imag.getGraphics();
@@ -94,12 +101,12 @@ public class View {
         int heightFrame = 550;
         frame.setSize(widthFrame, heightFrame);
 
-        jsp = new JScrollPane(jLabel);
+        JScrollPane jsp = new JScrollPane(jLabel);
         jsp.setBounds(0, 0, 500, 500);
         frame.add(jsp);
         loadFond();
         creatingToolbar();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
 
@@ -119,7 +126,6 @@ public class View {
             graphics2D.drawImage(copyImage(imag), null, 0, 0);
             graphics2D.drawLine(e.getFirstNode().getPoint().x, e.getFirstNode().getPoint().y,
                     e.getSecondNode().getPoint().x, e.getSecondNode().getPoint().y);
-            jLabel.update(graphics2D);
             jLabel.updateUI();
         }
     }
@@ -159,12 +165,14 @@ public class View {
     }
 
     private void creatingToolbar() {
-        trainButton.addMouseListener(new MouseAdapter() {
+        mission1.setText(missioncCreator.createNewMission());
+        mission2.setText(missioncCreator.createNewMission());
+        registrationButton.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent event) {
-
+                new RegistrationDialog(requestSender, View.this);
             }
         });
-        frame.add(trainButton);
+        frame.add(registrationButton);
 
         frame.add(pointForDoingRoadLabel);
         frame.add(budgetLabel);
@@ -172,7 +180,7 @@ public class View {
 
         stopGameButton.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent event) {
-
+                requestSender.sendMessage("/close");
             }
         });
         frame.add(stopGameButton);
@@ -180,6 +188,7 @@ public class View {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String[] target1 = mission1.getText().split(" - ");
+                requestSender.sendMessage("mission:" + mission1.getText());
                 addListnersForMissing(target1[0], target1[1]);
                 missionLabel.setText("Миссия:" + mission1.getText());
             }
@@ -189,20 +198,19 @@ public class View {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String[] target2 = mission2.getText().split(" - ");
+                requestSender.sendMessage("mission:" + mission2.getText());
                 addListnersForMissing(target2[0], target2[1]);
                 missionLabel.setText("Миссия:" + mission2.getText());
             }
         });
         frame.add(mission2);
+        frame.add(serverMessagesLabel);
+        frame.add(userNameLabel);
     }
 
     private void addListnersForMissing(String startNameCity, String endNodeRoute) {
         for (KeyListener keyListener : frame.getKeyListeners()) frame.removeKeyListener(keyListener);
-        KeyListener keyListener = new ClavaListener(controller/* controller.getNodeByName(startNameCity),
-                budget,pointForDoingRoad, controller.getNodeByName(endNodeRoute)*/);
-        controller.setStartPunkt(controller.getNodeByName(startNameCity));
-        controller.setEndNodeRoute(controller.getNodeByName(endNodeRoute));
-        controller.setMission(startNameCity+" - "+endNodeRoute);
+        KeyListener keyListener = new ClavaListener(requestSender);
         frame.setFocusable(true);
         frame.requestFocus();
         frame.addKeyListener(keyListener);
@@ -225,23 +233,32 @@ public class View {
     }
 
     public void updateMission(String s) {
-        System.out.println("mission1: "+mission1.getText());
-        System.out.println("mission2: "+mission2.getText());
-        System.out.println("s: "+s);
         if (mission1.getText().equals(s)) {
-            mission1=null;
-            mission1 = missioncCreator.createButton();
+            mission1.setText(missioncCreator.createNewMission());
+            missionLabel.setText("Выберите миссию");
             mission1.updateUI();
-            mission1.update(mission1.getGraphics());
-            System.out.println("mission1 after cheng: "+mission1.getText());
+            requestSender.sendMessage("/checkMissionForExistence" + mission1.getText());//TODO: проверку на наличие миссий
 
         }
         if (mission2.getText().equals(s)) {
-            mission2=null;
-            mission2 = missioncCreator.createButton();
+            mission2.setText(missioncCreator.createNewMission());
+            missionLabel.setText("Выберите миссию");
             mission2.updateUI();
-            mission2.update(mission1.getGraphics());
-            System.out.println("mission2 after cheng: "+mission2.getText());
+            requestSender.sendMessage("/checkMissionForExistence" + s);
         }
+    }
+
+    public void updaitServerMessages(String messages) {
+        serverMessagesLabel.append(messages);
+        serverMessagesLabel.update(serverMessagesLabel.getGraphics());
+    }
+
+    public void updaitUserName(String name) {
+        userNameLabel.setText("user:" + name);
+        userNameLabel.updateUI();
+    }
+
+    public void setRequestSender(RequestSender requestSender) {
+        this.requestSender = requestSender;
     }
 }

@@ -56,7 +56,7 @@ public class GraphOfCities {
         addEdge(new Edge(nodeBegin, nodeEnd));
     }
 
-    public void deleteOllElements() {
+    public void deleteAllElements() {
         Iterator<Node> nodeIterator = nodeList.iterator();
         while (nodeIterator.hasNext()) {
             nodeIterator.next();

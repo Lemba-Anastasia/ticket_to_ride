@@ -1,6 +1,5 @@
 package View;
 
-import Controllers.ClavaListener;
 import Controllers.Controller;
 import ElementsOfGraph.Node;
 
@@ -12,8 +11,6 @@ import java.util.List;
  * Created by Lemba on 13.09.2018.
  */
 public class MissioncCreator {
-    //private JDialog dialog;
-    //private View view;
     private List<String> missionList;
     private Controller controller;
 
@@ -52,5 +49,9 @@ public class MissioncCreator {
         String missionFromDeck= missionList.get(i);
         missionList.remove(i);
         return missionFromDeck;
+    }
+
+    public String createNewMission() {
+        return getMissionFromDeck();
     }
 }

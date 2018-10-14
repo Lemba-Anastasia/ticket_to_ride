@@ -7,18 +7,18 @@ import java.awt.event.KeyListener;
  * Created by Lemba on 12.09.2018.
  */
 public class ClavaListener implements KeyListener {
-    private Controller controller;
-    public ClavaListener(Controller controller) {
-        this.controller=controller;
+    private RequestSender requestSender;
+    public ClavaListener(RequestSender requestSender) {
+        this.requestSender = requestSender;
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
         if(e.getKeyChar()==KeyEvent.VK_A){
-            controller.activateIntidentNode();
+            requestSender.activateIntidentNode();
         }
         else if(e.getKeyChar()==KeyEvent.VK_ENTER){
-           controller.buidRailWay();
+           requestSender.buidRailWay();
         }
         System.out.println("TYPED");
     }
